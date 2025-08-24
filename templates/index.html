@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deepfake Detection</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-xl p-8 bg-gray-800 rounded-2xl shadow-lg">
+    <h1 class="text-3xl font-bold mb-6 text-center">Deepfake Detection System</h1>
+    
+    <form id="upload-form" method="POST" enctype="multipart/form-data" class="space-y-6">
+      <div>
+        <label for="file_type" class="block text-lg font-semibold text-gray-200 mb-2">Select File Type:</label>
+        <div class="relative">
+          <select id="file_type" name="file_type" required
+            class="block w-full appearance-none rounded-xl bg-gray-700 border border-gray-600 text-white px-4 py-3 pr-10 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-200">
+            <option value="" disabled selected>-- Choose Type --</option>
+            <option value="image">🖼️ Image</option>
+            <option value="video">🎥 Video</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+            <svg class="fill-current h-5 w-5" viewBox="0 0 20 20">
+              <path d="M7 7l3-3 3 3m0 6l-3 3-3-3" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div id="drop-area" class="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center cursor-pointer hover:border-green-500 transition duration-200">
+        <p class="text-gray-300">Drag & drop file here or <span class="text-green-400 underline">click to upload</span></p>
+        <input type="file" name="file" id="file" accept="image/*,video/*" required class="hidden">
+      </div>
+
+      <div id="preview" class="mt-4 hidden"></div>
+
+      <div class="flex justify-between items-center">
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-xl transition duration-200">
+          Submit
+        </button>
+        <button type="reset" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-xl transition duration-200" onclick="resetForm()">
+          Reset
+        </button>
+      </div>
+
+      {% if prediction %}
+      <div id="result" class="mt-6 text-center">
+        <h2 class="text-2xl font-semibold mb-2">Prediction Result</h2>
+        <p class="text-lg">
+          Prediction: <strong>{{ prediction }}</strong>
+        </p>
+        <p class="text-lg">
+          Real Confidence: {{ confidence_real }}%
+        </p>
+        <p class="text-lg">
+          Fake Confidence: {{ confidence_fake }}%
+        </p>
+      {% endif %}
+    </form>
+  </div>
+
+  <script>
+    const dropArea = document.getElementById("drop-area");
+    const fileInput = document.getElementById("file");
+    const preview = document.getElementById("preview");
+    const form = document.getElementById("upload-form");
+    const resultBox = document.getElementById("result");
+    const progressContainer = document.getElementById("progress-container");
+    const progressBar = document.getElementById("progress-bar");
+
+    ["dragenter", "dragover"].forEach(event => {
+      dropArea.addEventListener(event, e => {
+        e.preventDefault();
+        dropArea.classList.add("border-green-500", "bg-gray-700");
+      });
+    });
+
+    ["dragleave", "drop"].forEach(event => {
+      dropArea.addEventListener(event, e => {
+        e.preventDefault();
+        dropArea.classList.remove("border-green-500", "bg-gray-700");
+      });
+    });
+
+    dropArea.addEventListener("drop", e => {
+      const files = e.dataTransfer.files;
+      if (files.length) { 
+        fileInput.files = files;
+        handleFile(files[0]);
+      }
+    });
+
+    dropArea.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) {
+        handleFile(fileInput.files[0]);
+      }
+    });
+
+    function handleFile(file) {
+      preview.classList.remove("hidden");
+      preview.innerHTML = "";
+
+      const fileType = file.type;
+
+      if (fileType.startsWith("image/")) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.className = "max-w-full max-h-64 rounded-xl mx-auto";
+        preview.appendChild(img);
+      } else if (fileType.startsWith("video/")) {
+        const video = document.createElement("video");
+        video.src = URL.createObjectURL(file);
+        video.controls = true;
+        video.className = "w-full max-h-64 rounded-xl";
+        preview.appendChild(video);
+      } else {
+        preview.innerHTML = "<p class='text-red-400'>Unsupported file type.</p>";
+      }
+    }
+   
+
+    function resetForm() {
+      preview.innerHTML = "";
+      preview.classList.add("hidden");
+      resultBox?.classList.add("hidden");
+      progressContainer.classList.add("hidden");
+      fileInput.value = "";
+    }
+  </script>
+</body>
+</html>

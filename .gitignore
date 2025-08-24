@@ -1,0 +1,6 @@
+# Ignore model checkpoints / big files
+*.h5
+*.pkl
+*.pyd
+*.dll
+

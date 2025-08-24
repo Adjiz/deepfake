@@ -1,0 +1,8 @@
+flask
+tensorflow
+numpy
+opencv-python
+librosa
+Pillow
+mediapipe
+seaborn
